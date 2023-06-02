@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword, AuthErrorCodes } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendEmailVerification } from "firebase/auth";
 import { initializeApp } from "firebase/app";
-import { sendEmailVerification } from "firebase/auth";
-import { AiFillEyeInvisible, AiFillEye } from "react-icons/ai";
+import { AiFillEyeInvisible, AiFillEye, AiOutlineGoogle } from "react-icons/ai";
 import Swal from "sweetalert2";
 import { Login } from ".";
 
@@ -20,8 +19,8 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-const auth = getAuth();
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -34,7 +33,7 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-  
+
     if (password !== confirmPassword) {
       Swal.fire({
         icon: "error",
@@ -44,7 +43,7 @@ export default function Register() {
       });
       return;
     }
-  
+
     if (password.length < 8) {
       Swal.fire({
         icon: "error",
@@ -54,7 +53,7 @@ export default function Register() {
       });
       return;
     }
-  
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -73,7 +72,7 @@ export default function Register() {
       }
       // Redirect user to main page after successful registration
     } catch (error) {
-      if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
+      if (error.code === "auth/email-already-in-use") {
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -88,6 +87,30 @@ export default function Register() {
           confirmButtonColor: "#8cbbf1",
         });
       }
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const user = userCredential.user;
+      if (user) {
+        await sendEmailVerification(user);
+        Swal.fire({
+          icon: "info",
+          title: "Success",
+          text: "Registration successful. Please verify your email.",
+          confirmButtonColor: "#8cbbf1",
+        });
+        setIsRegistering(false); // Cambiar a la página de inicio de sesión
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message,
+        confirmButtonColor: "#8cbbf1",
+      });
     }
   };
 
@@ -163,6 +186,16 @@ export default function Register() {
                   className="font-bold w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-blue rounded-md hover:bg-blueHover focus:outline-none"
                 >
                   Register
+                </button>
+              </div>
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleGoogleRegister}
+                  className="flex items-center justify-center w-full px-4 py-2 text-white transition-colors duration-200 transform bg-red-500 rounded-md hover:bg-red-600 focus:outline-none"
+                >
+                  <AiOutlineGoogle className="w-5 h-5 mr-2" />
+                  Sign up with Google
                 </button>
               </div>
             </form>
