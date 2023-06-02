@@ -291,7 +291,7 @@ export default function Login() {
             )}
 
             <p className="mt-4 text-sm text-center text-gray-700">
-              Don't have an account?{" "}
+              Don&#39;t have an account?{" "}
               <button
                 className="font-medium text-blue-600 hover:underline"
                 onClick={handleSignUpClick}
